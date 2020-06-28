@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/Meituan-Dianping/cat-go/message"
+	"github.com/HQ1363/cat-go/message"
 )
 
 type eventData struct {

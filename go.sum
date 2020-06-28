@@ -1,5 +1,3 @@
-github.com/Meituan-Dianping/cat-go v2.0.0+incompatible h1:B6Qm1FReXusw4ozoTKgVzndqeWEgbPAMn05JcMLkhgU=
-github.com/Meituan-Dianping/cat-go v2.0.0+incompatible/go.mod h1:mi8e3/xcQ+3uZ1z5oMbvnZmT37xC76FJJKU9Nf4L2Qo=
 github.com/StackExchange/wmi v0.0.0-20190523213315-cbe66965904d h1:G0m3OIz70MZUWq3EgK3CesDbo8upS2Vm9/P3FtgI+Jk=
 github.com/StackExchange/wmi v0.0.0-20190523213315-cbe66965904d/go.mod h1:3eOhrUMpNV+6aFIbp5/iudMxNCF27Vw2OZgy4xEx0Fg=
 github.com/davecgh/go-spew v1.1.0 h1:ZDRjVQ15GmhC3fiQ8ni8+OwkZQO4DARzQgrnXU1Liz8=
