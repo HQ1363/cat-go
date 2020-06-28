@@ -32,6 +32,7 @@ type XMLConfigServers struct {
 type XMLConfigServer struct {
 	Host string `xml:"ip,attr"`
 	Port int    `xml:"port,attr"`
+	HttpPort int    `xml:"http-port,attr"`
 }
 
 var config = Config{
@@ -41,7 +42,7 @@ var config = Config{
 	ip:       defaultIp,
 	ipHex:    defaultIpHex,
 
-	httpServerPort:      8080,
+	httpServerPort:      2281,
 	httpServerAddresses: []serverAddress{},
 
 	serverAddress: []serverAddress{},
@@ -81,7 +82,10 @@ func parseXMLConfig(data []byte) (err error) {
 		logger.Warning("Failed to parse xml content")
 	}
 
-	for _, x := range c.Servers.Servers {
+	for index, x := range c.Servers.Servers {
+		if index == 0 {
+			config.httpServerPort = x.HttpPort
+		}
 		config.httpServerAddresses = append(config.httpServerAddresses, serverAddress{
 			host: x.Host,
 			port: x.Port,

@@ -10,11 +10,18 @@ The current latest version is 2.0.0
 
 Please check [**CHANGELOG**](./CHANGELOG.md) for information about our latest updates to the sdk.
 
+## Pre Actions
+```
+mkdir -p /data/applogs/cat
+mkdir -p /data/appdatas/cat
+准备好 /data/appdatas/cat/client.xml 文件
+```
+
 ## Installation
 
 You can simply get started with our sdk by using the following command:
 ```
-go get github.com/Meituan-Dianping/cat-go
+go get github.com/HQ1363/cat-go
 ```
 
 ## Quickstart
@@ -30,7 +37,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/Meituan-Dianping/cat-go/cat"
+	"github.com/HQ1363/cat-go/cat"
 )
 
 const TestType = "foo"
@@ -39,7 +46,7 @@ var wg = sync.WaitGroup{}
 
 func init() {
 	cat.DebugOn()
-	cat.Init("gocat.v2")
+	cat.Init("appkey")
 }
 
 // send transaction

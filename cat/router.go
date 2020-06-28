@@ -1,9 +1,8 @@
 package cat
 
 import (
-	"encoding/xml"
+	"encoding/json"
 	"fmt"
-	"io"
 	"io/ioutil"
 	"math"
 	"net"
@@ -13,15 +12,13 @@ import (
 	"time"
 )
 
-type routerConfigXMLProperty struct {
-	XMLName xml.Name `xml:"property"`
-	Id      string   `xml:"id,attr"`
-	Value   string   `xml:"value,attr"`
+type routerConfigJSONProperty struct {
+	Routers string `json:"routers"`
+	Sample  string `json:"sample"`
 }
 
-type routerConfigXML struct {
-	XMLName    xml.Name                  `xml:"property-config"`
-	Properties []routerConfigXMLProperty `xml:"property"`
+type routerConfigJSON struct {
+	Kvs *routerConfigJSONProperty `json:"kvs"`
 }
 
 type catRouterConfig struct {
@@ -29,14 +26,14 @@ type catRouterConfig struct {
 	sample  float64
 	routers []serverAddress
 	current *serverAddress
-	ticker *time.Ticker
+	ticker  *time.Ticker
 }
 
 var router = catRouterConfig{
 	scheduleMixin: makeScheduleMixedIn(signalRouterExit),
 	sample:        1.0,
 	routers:       make([]serverAddress, 0),
-	ticker: nil,
+	ticker:        nil,
 }
 
 func (c *catRouterConfig) GetName() string {
@@ -49,7 +46,7 @@ func (c *catRouterConfig) updateRouterConfig() {
 	query.Add("domain", config.domain)
 	query.Add("ip", config.ip)
 	query.Add("hostname", config.hostname)
-	query.Add("op", "xml")
+	query.Add("op", "json")
 
 	u := url.URL{
 		Scheme:   "http",
@@ -70,8 +67,11 @@ func (c *catRouterConfig) updateRouterConfig() {
 			logger.Warning("Error occurred while getting router config from url %s", u.String())
 			continue
 		}
-
-		c.parse(resp.Body)
+		result, err := ioutil.ReadAll(resp.Body)
+		if err != nil {
+			logger.Error("http parse data error: ", err.Error())
+		}
+		c.parse(result)
 		return
 	}
 
@@ -112,7 +112,7 @@ func (c *catRouterConfig) updateSample(v string) {
 	sample, err := strconv.ParseFloat(v, 32)
 	if err != nil {
 		logger.Warning("Sample should be a valid float, %s given", v)
-	} else if math.Abs(sample - c.sample) > 1e-9 {
+	} else if math.Abs(sample-c.sample) > 1e-9 {
 		c.sample = sample
 		logger.Info("Sample rate has been set to %f%%", c.sample*100)
 	}
@@ -121,39 +121,25 @@ func (c *catRouterConfig) updateSample(v string) {
 func (c *catRouterConfig) updateBlock(v string) {
 	if v == "false" {
 		enable()
-	} else  {
+	} else {
 		disable()
 	}
 }
 
-func (c *catRouterConfig) parse(reader io.ReadCloser) {
-	bytes, err := ioutil.ReadAll(reader)
-	if err != nil {
-		return
+func (c *catRouterConfig) parse(res []byte) {
+	logger.Info("response: %s\n", string(res))
+	t := new(routerConfigJSON)
+	if err := json.Unmarshal(res, t); err != nil {
+		logger.Warning("Error occurred while parsing router config json content.\n%s, %s", string(res), err.Error())
 	}
-
-	t := new(routerConfigXML)
-	if err := xml.Unmarshal(bytes, &t); err != nil {
-		logger.Warning("Error occurred while parsing router config xml content.\n%s", string(bytes))
-	}
-
-	for _, property := range t.Properties {
-		switch property.Id {
-		case propertySample:
-			c.updateSample(property.Value)
-		case propertyRouters:
-			c.updateRouters(property.Value)
-		case propertyBlock:
-			c.updateBlock(property.Value)
-		}
-	}
+	c.updateRouters(t.Kvs.Routers)
 }
 
 func (c *catRouterConfig) updateRouters(router string) {
 	newRouters := resolveServerAddresses(router)
 
 	oldLen, newLen := len(c.routers), len(newRouters)
-
+	logger.Info("oldLen: %d, newLen: %d", oldLen, newLen)
 	if newLen == 0 {
 		return
 	} else if oldLen == 0 {
